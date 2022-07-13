@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: MIT */
 
 #include <infos.h>
-
+extern "C" {
 int printf(const char *fmt, ...)
 {
 	char buffer[0x1000];
@@ -17,7 +17,7 @@ int printf(const char *fmt, ...)
 
 	return rc;
 }
-
+}
 int sprintf(char *buffer, const char *fmt, ...)
 {
 	int rc;

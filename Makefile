@@ -10,7 +10,7 @@ export bin-dir := $(top-dir)/bin
 
 crt-target := crt.a
 lib-target := libinfos.a
-tool-targets := init ls tree shell prio-sched-test sleep-sched-test ticker-sched-test hello-world mandelbrot cat date tictactoe time
+tool-targets := init ls tree shell prio-sched-test sleep-sched-test ticker-sched-test hello-world mandelbrot cat date tictactoe time exceptions-test test pagefault alloc-test mutex-test thread_local
 
 export real-crt-target   := $(bin-dir)/$(crt-target)
 export real-lib-target   := $(bin-dir)/$(lib-target)
@@ -23,7 +23,9 @@ crt-cxxflags := -g -Wall -Wno-main -no-pie -nostdlib -nostdinc -std=gnu++17 -O3 
 
 lib-srcs := $(shell find $(lib-dir) | grep -E "\.cpp$$")
 lib-objs := $(lib-srcs:.cpp=.o)
-lib-cxxflags := -shared -g -Wall -Wno-main -nostdlib -nostdinc -std=gnu++17 -O3 -I$(inc-dir) -fno-builtin -ffreestanding -mno-sse -mno-avx -fno-stack-protector -fPIC
+lib-srcs-c := $(shell find $(lib-dir) | grep -E "\.c$$")
+lib-objs-c := $(lib-srcs-c:.c=.o)
+lib-cxxflags := -shared -g -Wall -Wno-main -nostdlib -nostdinc -std=gnu++17 -O3 -I$(inc-dir) -fno-builtin -ffreestanding -mno-sse -mno-avx -fno-stack-protector -fPIC -fpermissive
 lib-ldflags :=
 
 fs-target := $(bin-dir)/rootfs.tar
@@ -33,20 +35,20 @@ export BUILD-TARGET = $(patsubst $(top-dir)/%,%,$@)
 all: $(real-crt-target) $(real-lib-target) $(real-tool-targets)
 
 clean: $(real-tool-clean-targets)
-	@echo "  RM    $(real-lib-target) $(lib-objs) $(real-tool-targets)"
-	$(q)rm -f $(real-lib-target) $(real-crt-target) $(crt-objs) $(lib-objs) $(real-tool-targets)
+	@echo "  RM    $(real-lib-target) $(lib-objs) $(real-tool-targets) "
+	$(q)rm -f $(real-lib-target) $(real-crt-target) $(crt-objs) $(lib-objs) $(real-tool-targets) $(lib-objs) $(lib-objs-c) 
 
 fs: $(fs-target)
 
-$(real-crt-target): $(bin-dir) $(crt-objs)
+$(real-crt-target): $(bin-dir) $(crt-objs) $(lib-objs-c) 
 	@echo "  AR      $(BUILD-TARGET)"
-	$(q)ar rcs $@ $(crt-objs)
+	$(q)ar rcs $@ $(crt-objs)  
 
 $(real-lib-target): $(bin-dir) $(lib-objs)
 #	@echo "  LD      $(BUILD-TARGET)"
-# $(q)g++ -shared -o $@ $(lib-ldflags) $(lib-objs)
+# $(q)g++ -shared -o $@ $(lib-ldflags) $(lib-objs) $(lib-objs-c)
 	@echo "  AR      $(BUILD-TARGET)"
-	$(q)ar rcs $@ $(lib-objs)
+	$(q)ar rcs $@ $(lib-objs) $(lib-objs-c)
 
 $(bin-dir):
 	mkdir $@
@@ -60,6 +62,10 @@ $(real-tool-clean-targets): .FORCE
 $(lib-objs): %.o: %.cpp
 	@echo "  C++     $(BUILD-TARGET)"
 	$(q)g++ -c -o $@ $(lib-cxxflags) $<
+
+$(lib-objs-c): %.o: %.c
+	@echo "  C       $(BUILD-TARGET)"
+	$(q)gcc -c -o $@ $(lib-cxxflags) $<
 
 $(crt-objs): %.o: %.cpp
 	@echo "  C++     $(BUILD-TARGET)"
@@ -91,6 +97,8 @@ $(fs-target): all
 
 	cp README $(bin-dir)/docs/
 
-	tar cf $@ -C $(bin-dir) $(tool-targets) docs/ subdir1/ subdir2/
+	cp ../infos/out/infos-kernel.64 bin/infos-kernel.64
+
+	tar cf $@ -C $(bin-dir) $(tool-targets) docs/ subdir1/ subdir2/ infos-kernel.64
 
 .PHONY: .FORCE

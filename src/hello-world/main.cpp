@@ -5,8 +5,16 @@
 
 #include <infos.h>
 
+class A {};
+
 int main(const char *cmdline)
 {
-    // TODO: Implement me!
+	try {
+		printf("throwing\n");
+		throw A();
+	} catch (A& a) {
+		printf("caught\n");
+	}
+    printf("Hello World\n");
     return 0;
 }

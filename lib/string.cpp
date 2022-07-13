@@ -2,6 +2,7 @@
 
 #include <infos.h>
 
+extern "C" {
 int strcmp(const char *l, const char *r)
 {
 	while (*l && *r) {
@@ -19,4 +20,5 @@ int strlen(const char *s)
 	}
 	
 	return count;
+}
 }

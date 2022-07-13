@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: MIT */
 
 #include <infos.h>
+#include <abi.h>
 
 HPROC exec(const char *program, const char *args)
 {
@@ -12,9 +13,40 @@ void wait_proc(HPROC proc)
 	syscall(Syscall::SYS_WAIT_PROC, proc);
 }
 
+extern void run_thread_atexit();
+
+class ThreadLocalHolder {
+public:
+    ThreadLocalHolder(thread_entry_arg* arg) {
+        prepare_thread_local();
+        ptr = arg;
+    }
+
+    ~ThreadLocalHolder() {
+        run_thread_atexit();
+        clean_up_thread_local();
+        delete ptr;
+        syscall(Syscall::SYS_THREAD_LEAVE);
+    }
+private:
+    thread_entry_arg* ptr;
+};
+
+void thread_func(thread_entry_arg* arg) {
+    ThreadLocalHolder holder(arg);
+    try {
+        arg->f(arg->ptr);
+    } catch (...) {
+        printf("thread leaving due to exception of type %s\n", __cxa_last_exception_name());
+    }
+}
+
 HTHREAD create_thread(ThreadProc tp, void *arg, SchedulingEntityPriority priority)
 {
-    return (HTHREAD)syscall(Syscall::SYS_CREATE_THREAD, (unsigned long)tp, (unsigned long)arg, (unsigned long)priority);
+	auto thread_arg = new thread_entry_arg();
+	thread_arg->f = tp;
+	thread_arg->ptr = arg;
+    return (HTHREAD)syscall(Syscall::SYS_CREATE_THREAD, (unsigned long)thread_func, (unsigned long)thread_arg, (unsigned long)priority);
 }
 
 void stop_thread(HTHREAD thread)
