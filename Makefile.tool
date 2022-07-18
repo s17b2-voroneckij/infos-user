@@ -2,8 +2,8 @@ export tool-out  := $(TOOL)
 export tool-name := $(notdir $(TOOL))
 export tool-src-dir := $(src-dir)/$(tool-name)
 
-tool-srcs := $(shell find $(tool-src-dir) | grep -E "\.cpp$$")
-tool-objs := $(tool-srcs:.cpp=.o)
+tool-srcs := $(shell find $(tool-src-dir) | grep -E "\.cpp$$") 
+tool-objs := $(tool-srcs:.cpp=.o) 
 
 common-cflags := -std=gnu++17 -g -Wall -O3 -nostdlib -nostdinc -ffreestanding -fno-stack-protector -mno-sse -mno-avx -no-pie
 tool-cflags   := $(common-cflags) -I$(inc-dir)
@@ -21,6 +21,7 @@ clean:
 $(tool-out): $(real-lib-target) $(real-crt-target) $(tool-objs)
 	@echo "  LD      $(BUILD-TARGET)"
 	$(q)g++ -o $@ $(tool-ldflags) $(tool-objs) $(real-crt-target) $(real-lib-target)
+
 # -L$(bin-dir) -linfos
 
 $(tool-objs): %.o: %.cpp

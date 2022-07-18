@@ -3,7 +3,9 @@
 #include <infos.h>
 #include <abi.h>
 
+extern "C" {
 extern int main(const char *cmdline);
+}
 
 HFILE __console_handle;
 
@@ -30,6 +32,7 @@ extern void perform_malloc_check();
 extern void prepare_thread_local();
 extern void clean_up_thread_local();
 void run_thread_atexit();
+void run_atexit();
 
 void infos_main(const char *cmdline, const char *path)
 {
@@ -60,6 +63,7 @@ void infos_main(const char *cmdline, const char *path)
     if (need_prepare) {
         exceptions_clean_up();
         run_thread_atexit();
+        run_atexit();
         clean_up_thread_local();
         perform_malloc_check();
     }
@@ -74,6 +78,7 @@ struct atexit_info {
 };
 
 static thread_local atexit_info* first_atexit_info;
+static atexit_info* first_global_atexit_info;
 extern "C" {
 void* __dso_handle;
 
@@ -81,6 +86,12 @@ void __cxa_thread_atexit(void (*func)(void*), void *obj, void *dso_symbol) {
     auto new_atexit_info = new atexit_info();
     *new_atexit_info = {.func = func, .obj = obj, .next = first_atexit_info};
     first_atexit_info = new_atexit_info;
+}
+
+int __cxa_atexit(void (*func) (void *), void *obj) {
+    auto new_atexit_info = new atexit_info();
+    *new_atexit_info = {.func = func, .obj = obj, .next = first_global_atexit_info};
+    first_global_atexit_info = new_atexit_info;
 }
 }
 
@@ -90,5 +101,14 @@ void run_thread_atexit() {
         auto next = first_atexit_info->next;
         delete first_atexit_info;
         first_atexit_info = next;
+    }
+}
+
+void run_atexit() {
+    while (first_global_atexit_info) {
+        first_global_atexit_info->func(first_global_atexit_info->obj);
+        auto next = first_global_atexit_info->next;
+        delete first_global_atexit_info;
+        first_global_atexit_info = next;
     }
 }
