@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: MIT */
-
+// this file should only be included in C sources
 #pragma once
 
 typedef unsigned char uint8_t;
