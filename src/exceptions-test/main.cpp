@@ -21,6 +21,8 @@ public:
     ~A() {
         instances--;
     }
+
+    int val = 9;
 };
 
 class Int {
@@ -189,6 +191,28 @@ void test8() {
     }
 }
 
+void test9() {
+    int cnt = 2;
+    try {
+        throw A();
+        my_assert(false);
+    } catch (A& a) {
+        try {
+            throw Int(1);
+            my_assert(false);
+        } catch (Int b) {
+            printf("caught int %d\n", b);
+            my_assert(b.n == 1);
+            cnt--;
+        }
+        printf("caught A with value %d\n", a.val);
+        my_assert(a.val == 9);
+        cnt--;
+    }
+    my_assert(cnt == 0);
+    printf("test 9 correct catch\n");
+}
+
 int run_tests() {
     firstTest();
     my_assert(instances == 0);
@@ -206,7 +230,8 @@ int run_tests() {
     my_assert(instances == 0);
     test8();
     my_assert(instances == 0);
-
+    test9();
+    my_assert(instances == 0);
 	printf("about to throw an Exception that will not be caught\n");
     throw A();
     printf("unreachable\n");
