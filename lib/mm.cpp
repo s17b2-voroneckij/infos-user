@@ -37,6 +37,7 @@ static bool check_possible = true;
 static uint8_t* free_memory_start = NULL;
 static uint64_t free_memory = 0;
 static mutex malloc_mutex;
+extern "C" {
 void* malloc(uint64_t size) {
     unique_lock<mutex> lock(malloc_mutex);
     if (free_memory < size) {
@@ -74,6 +75,7 @@ void free(void* va) {
         check_possible = false;
     }
     //syscall(Syscall::SYS_FREE_MEMORY, (uint64_t)va);
+}
 }
 
 void perform_malloc_check() {

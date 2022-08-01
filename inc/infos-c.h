@@ -57,6 +57,8 @@ enum Syscall
 	SYS_FREE_MEMORY = 24,
 	SYS_FUTEX_WAIT = 25,
 	SYS_FUTEX_WAKE = 26,
+	SYS_THREAD_ID = 27,
+	SYS_THREAD_LEAVE = 28
 };
 
 typedef unsigned long HANDLE;
@@ -77,22 +79,7 @@ static inline int fetch_and_add(int* variable, int value)
     return value;
 }
 
-/*extern unsigned long syscall(Syscall nr);
-extern unsigned long syscall(Syscall nr, unsigned long a1);
-extern unsigned long syscall(Syscall nr, unsigned long a1, unsigned long a2);
-extern unsigned long syscall(Syscall nr, unsigned long a1, unsigned long a2, unsigned long a3);
-extern unsigned long syscall(Syscall nr, unsigned long a1, unsigned long a2, unsigned long a3, unsigned long a4);*/
-
-
-static inline unsigned long syscall(enum Syscall nr, unsigned long a1, unsigned long a2, unsigned long a3, unsigned long a4)
-{
-	unsigned long ret;
-	asm volatile("int $0x81"
-				 : "=a"(ret)
-				 : "a"((unsigned long)nr), "D"(a1), "S"(a2), "d"(a3), "c"(a4)
-				 : "r11");
-	return ret;
-}
+extern unsigned long syscall(enum Syscall nr, unsigned long a1, unsigned long a2, unsigned long a3, unsigned long a4);
 
 extern void exit(int exit_code) __attribute__((noreturn));
 
@@ -149,8 +136,13 @@ extern int strlen(const char *str);
 extern char getch();
 
 extern void* malloc(uint64_t size);
-extern void free(uintptr_t va);
+extern void free(void* va);
 
 extern HFILE __console_handle;
+
+uint64_t rdfsbase();
+uint64_t rdgsbase();
+void wrfsbase(uint64_t val);
+void wrgsbase(uint64_t val);
 
 #define NULL 0

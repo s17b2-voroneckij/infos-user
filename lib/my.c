@@ -19,10 +19,6 @@ void *memset(void *s, int c, size_t n) {
 
 void gcc_unreachable() {}
 
-void exit(int a) {
-	syscall(SYS_EXIT, 0, 0, 0, 0);
-}
-
 void puts(const char* t) {
 	printf(t);
 }
