@@ -27,6 +27,25 @@ void abort() {
     exit(0);
 }
 
+int strcmp(const char *l, const char *r)
+{
+	while (*l && *r) {
+		if (*l++ != *r++) return -1;
+	}
+	
+	return 0;
+}
+
+int strlen(const char *s)
+{
+	int count = 0;
+	while (*s++) {
+		count++;
+	}
+	
+	return count;
+}
+
 asm(
 	".global atomic_exchange\n"
 	"atomic_exchange:\n"
@@ -48,3 +67,9 @@ asm(
 	"	lock decq       (%rdi)\n"
 	"	ret\n"
 );
+
+void exit(int exit_code)
+{
+	syscall(SYS_EXIT, exit_code, 0, 0, 0);
+	__builtin_unreachable();
+}

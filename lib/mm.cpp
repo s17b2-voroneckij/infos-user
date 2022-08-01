@@ -1,24 +1,6 @@
 #include <infos.h>
 #include <mutex.h>
 
-template<typename T>
-T min(T a, T b) {
-    if (a < b) {
-        return a;
-    } else {
-        return b;
-    }
-}
-
-template<typename T>
-T max(T a, T b) {
-    if (a > b) {
-        return a;
-    } else {
-        return b;
-    }
-}
-
 struct AssertionException{};
 
 void my_assert(bool b) {
@@ -74,7 +56,6 @@ void free(void* va) {
         printf("ERROR: mismatched free with va: %llx\n", va);
         check_possible = false;
     }
-    //syscall(Syscall::SYS_FREE_MEMORY, (uint64_t)va);
 }
 }
 
